@@ -9,5 +9,4 @@ public class Zombie extends SteeringActor {
         super(region, false);
     }
 
-
 }

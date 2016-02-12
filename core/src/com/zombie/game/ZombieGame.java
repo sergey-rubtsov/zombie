@@ -7,6 +7,7 @@ import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.zombie.game.game.GameInputProcessor;
 import com.zombie.game.gui.GUITable;
 import com.zombie.game.game.GameScene;
 
@@ -30,7 +31,8 @@ public class ZombieGame extends ApplicationAdapter {
         // Create status bar
         statusBar = new GUITable();
         uiStage.addActor(statusBar);
-        gameScene = new GameScene(this);
+
+        gameScene = new GameScene();
 
         InputMultiplexer im = new InputMultiplexer(gameScene.getStage(), uiStage, gameScene.getInputProcessor());
         Gdx.input.setInputProcessor(im);
@@ -42,9 +44,10 @@ public class ZombieGame extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         if (!statusBar.getPauseButton().isChecked()) {
             // Update AI time
-            GdxAI.getTimepiece().update(Gdx.graphics.getDeltaTime());
+            float deltaTime = Gdx.graphics.getDeltaTime();
+            GdxAI.getTimepiece().update(deltaTime);
             // Update
-            //gameScene.update();
+            gameScene.update(deltaTime);
         }
         // Draw
         gameScene.draw();

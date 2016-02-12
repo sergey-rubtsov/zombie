@@ -5,6 +5,9 @@ import com.badlogic.gdx.ai.steer.proximities.FieldOfViewProximity;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.zombie.game.game.Assets;
 import com.zombie.game.game.InteractionArea;
 import com.zombie.game.steering.SteeringActor;
@@ -16,19 +19,21 @@ import java.util.Random;
  */
 public class ActorFactory {
 
-    public static Zombie getRandomZombie(InteractionArea area) {
+    public static Zombie getRandomZombie(Array<FieldOfViewProximity<Vector2>> proximities,
+                                         Array<SteeringActor> characters, Array<BlendedSteering<Vector2>> blendedSteerings,
+                                        Group group) {
         TextureRegion tr = Assets.zombies[new Random().nextInt(Assets.zombies.length)][new Random().nextInt(Assets.zombies[0].length)];
         Zombie zombie = new Zombie(tr);
 
-        //character.setPosition(MathUtils.random(container.stageWidth), MathUtils.random(container.stageHeight), Align.center);
+        zombie.setPosition(MathUtils.random(group.getWidth()), MathUtils.random(group.getHeight()), Align.center);
         zombie.setMaxLinearSpeed(70);
         zombie.setMaxLinearAcceleration(400); //
         zombie.setMaxAngularAcceleration(0);
         zombie.setMaxAngularSpeed(5);
 
-        FieldOfViewProximity<Vector2> proximity = new FieldOfViewProximity<Vector2>(zombie, area.getCharacters(), 140,
+        FieldOfViewProximity<Vector2> proximity = new FieldOfViewProximity<Vector2>(zombie, characters, 140,
                 270 * MathUtils.degreesToRadians);
-        area.getProximities().add(proximity);
+        proximities.add(proximity);
         //if (i == 0) char0Proximity = proximity;
         Alignment<Vector2> groupAlignmentSB = new Alignment<Vector2>(zombie, proximity);
         Cohesion<Vector2> groupCohesionSB = new Cohesion<Vector2>(zombie, proximity);
@@ -51,7 +56,7 @@ public class ActorFactory {
                 .add(groupAlignmentSB, .2f) //
                 .add(groupCohesionSB, .06f) //
                 .add(groupSeparationSB, 1.7f);
-        area.getBlendedSteerings().add(blendedSteering);
+        blendedSteerings.add(blendedSteering);
 
         // TODO set more proper values
         Wander<Vector2> wanderSB = new Wander<Vector2>(zombie) //
@@ -69,10 +74,14 @@ public class ActorFactory {
 
         zombie.setSteeringBehavior(prioritySteeringSB);
 
-        area.getGroup().addActor(zombie);
+        group.addActor(zombie);
 
-        area.getCharacters().add(zombie);
+        characters.add(zombie);
         return zombie;
+    }
+
+    public static Zombie getRandomZombie(InteractionArea area) {
+        return getRandomZombie(area.getProximities(), area.getCharacters(), area.getBlendedSteerings(), area.getGroup());
     }
 
     public static SteeringActor getRandomSurvivor(InteractionArea area) {

@@ -1,14 +1,13 @@
 package com.zombie.game.game;
 
 import com.badlogic.gdx.ai.GdxAI;
-import com.badlogic.gdx.ai.steer.behaviors.*;
-import com.badlogic.gdx.ai.steer.proximities.FieldOfViewProximity;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Group;
@@ -17,24 +16,15 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.viewport.*;
-import com.zombie.game.ZombieGame;
 import com.zombie.game.actors.ActorFactory;
 import com.zombie.game.actors.Pointer;
 import com.zombie.game.steering.SteeringActor;
 
 public class GameScene {
 
-    private static final boolean DEBUG_STAGE = true;
+    private static final boolean DEBUG_STAGE = false;
 
-    protected ZombieGame game;
-
-    private World world;
-
-    private Body[] walls;
-
-    public Stage stage;
-
-    protected Group group;
+    GameInputProcessor inputProcessor;
 
     private Pointer pointer;
 
@@ -42,28 +32,43 @@ public class GameScene {
 
     boolean drawDebug;
 
-    GameInputProcessor inputProcessor;
-
     TiledBackground map;
     HexagonalTiledMapRenderer hexRenderer;
     ShapeRenderer shapeRenderer;
 
-    private float lastUpdateTime;
-    OrthographicCamera camera;
+    private World world;
+    private Body[] walls;
+
+    public Stage stage;
+
+    protected Group group;
+
     InteractionArea area;
 
-    public GameScene(ZombieGame game) {
-        this.game = game;
+    private float lastUpdateTime;
+    OrthographicCamera camera;
+
+    public final Frame frame;
+
+    public GameScene() {
+        this.inputProcessor = new GameInputProcessor(this);
+        frame = new Frame();
+
         camera = new OrthographicCamera();
-        this.map = new TiledBackground(1);
+        world = createWorld();
+
+        this.map = new TiledBackground(100, 100);
         Viewport viewport = new ScreenViewport(camera);
         stage = new Stage(viewport);
         stage.setDebugAll(DEBUG_STAGE);
         this.pointer = new Pointer();
-        this.inputProcessor = new GameInputProcessor(this, pointer);
+        this.pointer.getPosition().x = map.getMapWidth() / 2;
+        this.pointer.getPosition().y = map.getMapHeight() / 2;
+
     }
 
     public void create() {
+        world = createWorld();
         buildGroup(map.getMapWidth(), map.getMapHeight());
         buildCharacters();
         hexRenderer = new HexagonalTiledMapRenderer(map);
@@ -94,8 +99,9 @@ public class GameScene {
     private void buildCharacters() {
         this.characters = new Array<SteeringActor>();
         this.area = new InteractionArea(this.characters, group);
-
-
+        for (int i = 0; i < 400; i++) {
+            ActorFactory.getRandomZombie(area);
+        }
 
         //buildTarget();
         //buildZombies();
@@ -106,11 +112,22 @@ public class GameScene {
     public void draw() {
         hexRenderer.setView(getCamera());
         hexRenderer.render();
+        drawFrame();
         if (drawDebug) {
             drawShapes(characters);
         }
         stage.act();
         stage.draw();
+    }
+
+    public void drawFrame() {
+        if (frame.isOpened()) {
+            shapeRenderer.begin(ShapeType.Line);
+            shapeRenderer.setColor(frame.getColor());
+            shapeRenderer.setProjectionMatrix(getCamera().combined);
+            shapeRenderer.rect(frame.getPointA().x, frame.getPointA().y, frame.getPointC().x - frame.getPointA().x, frame.getPointC().y -  frame.getPointA().y);
+            shapeRenderer.end();
+        }
     }
 
     public void drawShapes(Array<SteeringActor> objects) {
@@ -125,7 +142,6 @@ public class GameScene {
             shapeRenderer.circle(obj.getPosition().x, obj.getPosition().y, 20);
             shapeRenderer.end();
         }
-
     }
 
     public Vector2 screenToStageCoordinates(float screenX, float screenY) {
@@ -159,6 +175,7 @@ public class GameScene {
         group.remove();
         group = null;
         map.dispose();
+        world.dispose();
         shapeRenderer.dispose();
         hexRenderer.dispose();
     }
@@ -171,11 +188,69 @@ public class GameScene {
         return stage;
     }
 
+    public TiledBackground getMap() {
+        return map;
+    }
+
+    public Vector2 getUnprojectPosition(int screenX, int screenY) {
+        Vector3 temp = camera.unproject(new Vector3(screenX, screenY, 0));
+        return new Vector2(temp.x, temp.y);
+    }
+
+    public void scrollCamera(int amount) {
+        if (camera.zoom + amount >= 1){
+            camera.zoom = camera.zoom + amount;
+        }
+    }
+
+    /** Instantiate a new World with no gravity and tell it to sleep when possible. */
+    public World createWorld() {
+        return createWorld(0);
+    }
+
+    /** Instantiate a new World with the given gravity and tell it to sleep when possible. */
+    public World createWorld(float y) {
+        return new World(new Vector2(0, y), true);
+    }
+
+    public void update(float deltaTime) {
+        // Update box2d world
+        world.step(deltaTime, 8, 3);
+        inputProcessor.processMoveCamera(deltaTime);
+    }
+
+    public void moveUpCamera(float deltaTime) {
+        camera.position.y = camera.position.y + camera.zoom * 500 * deltaTime;
+    }
+
+    public void moveDownCamera(float deltaTime) {
+        camera.position.y = camera.position.y - camera.zoom * 500 * deltaTime;
+    }
+
+    public void moveLeftCamera(float deltaTime) {
+        camera.position.x = camera.position.x - camera.zoom * 500 * deltaTime;
+    }
+
+    public void moveRightCamera(float deltaTime) {
+        camera.position.x = camera.position.x + camera.zoom * 500 * deltaTime;
+    }
+
     public GameInputProcessor getInputProcessor() {
         return inputProcessor;
     }
 
-    public TiledBackground getMap() {
-        return map;
+    public void openFrame(Vector2 unprojectPosition, int button) {
+        frame.setPointA(unprojectPosition);
+        frame.setColor(button);
+        frame.open();
+    }
+
+    public void closeFrame(Vector2 unprojectPosition) {
+        frame.setPointC(unprojectPosition);
+        frame.close();
+    }
+
+    public void stretchFrame(Vector2 unprojectPosition) {
+        frame.setPointC(unprojectPosition);
     }
 }
