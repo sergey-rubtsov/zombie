@@ -1,5 +1,6 @@
 package com.zombie.game.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -22,7 +23,7 @@ import com.zombie.game.steering.SteeringActor;
 
 public class GameScene {
 
-    private static final boolean DEBUG_STAGE = false;
+    private static final boolean DEBUG_STAGE = true;
 
     GameInputProcessor inputProcessor;
 
@@ -125,8 +126,10 @@ public class GameScene {
             shapeRenderer.begin(ShapeType.Line);
             shapeRenderer.setColor(frame.getColor());
             shapeRenderer.setProjectionMatrix(getCamera().combined);
+            Gdx.gl.glLineWidth(2);
             shapeRenderer.rect(frame.getPointA().x, frame.getPointA().y, frame.getPointC().x - frame.getPointA().x, frame.getPointC().y -  frame.getPointA().y);
             shapeRenderer.end();
+            Gdx.gl.glLineWidth(1);
         }
     }
 
@@ -135,6 +138,7 @@ public class GameScene {
             shapeRenderer.begin(ShapeType.Line);
             shapeRenderer.setColor(0, 1, 0, 1);
             shapeRenderer.setProjectionMatrix(getCamera().combined);
+
             /*float angle = char0Proximity.getAngle() * MathUtils.radiansToDegrees;
             float radius = obj.getBoundingRadius() / getCamera().zoom;
             shapeRenderer.arc(obj.getPosition().x, obj.getPosition().y, radius,
