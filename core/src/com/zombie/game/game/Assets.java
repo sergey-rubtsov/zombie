@@ -12,6 +12,7 @@ public class Assets {
     public static Texture charactersTexture;
     public static Texture zombiesTexture;
     public static Texture hexture;
+    public static Texture grass;
     public static TextureRegion[][] characters;
     public static TextureRegion[][] zombies;
     public static TextureRegion[][] hexes;
@@ -22,6 +23,7 @@ public class Assets {
         charactersTexture = new Texture("data/npc/characters.png");
         zombiesTexture = new Texture("data/npc/zombies.png");
         hexture = new Texture("data/hexes.png");
+        grass = new Texture("data/grass.png");
         characters = new TextureRegion[4][12];
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 12; j++) {
@@ -35,7 +37,8 @@ public class Assets {
             }
         }
         target = new TextureRegion(new Texture("data/target.png"));
-        hexes = TextureRegion.split(hexture, 112, 97);
+        //hexes = TextureRegion.split(hexture, 112, 97);
+        hexes = TextureRegion.split(grass, 112, 97);
     }
 
 }

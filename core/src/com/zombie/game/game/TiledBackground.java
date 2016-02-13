@@ -83,6 +83,11 @@ public class TiledBackground extends TiledMap {
     public int getMapHeight() {
         return mapHeight;
     }
+
+    public TiledMapTileLayer.Cell getCell() {
+        TiledMapTileLayer.Cell cell = null;
+        return cell;
+    }
 }
 
 

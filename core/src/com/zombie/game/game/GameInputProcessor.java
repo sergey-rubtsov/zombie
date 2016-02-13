@@ -34,7 +34,6 @@ public class GameInputProcessor implements InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        System.out.println(screenX + " " + screenY + " " + scene.getUnprojectPosition(screenX, screenY).x + " " + scene.getUnprojectPosition(screenX, screenY).y);
         scene.openFrame(scene.getUnprojectPosition(screenX, screenY), button);
         return true;
     }

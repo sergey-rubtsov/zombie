@@ -44,6 +44,7 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
     float angularVelocity;
     float boundingRadius;
     boolean tagged;
+    Color selectionColor = Color.CLEAR;
 
     float maxLinearSpeed = 100;
     float maxLinearAcceleration = 200;
@@ -281,4 +282,11 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
         return result + (max / 5);
     }
 
+    public Color getSelectionColor() {
+        return selectionColor;
+    }
+
+    public void setSelectionColor(Color selectionColor) {
+        this.selectionColor = selectionColor;
+    }
 }

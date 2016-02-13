@@ -2,6 +2,7 @@ package com.zombie.game.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.GdxAI;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
@@ -23,7 +24,7 @@ import com.zombie.game.steering.SteeringActor;
 
 public class GameScene {
 
-    private static final boolean DEBUG_STAGE = true;
+    private static final boolean DEBUG_STAGE = false;
 
     GameInputProcessor inputProcessor;
 
@@ -49,11 +50,14 @@ public class GameScene {
     private float lastUpdateTime;
     OrthographicCamera camera;
 
-    public final Frame frame;
+    private final Frame frame;
+
+    private final Array<SteeringActor> selected;
 
     public GameScene() {
         this.inputProcessor = new GameInputProcessor(this);
         frame = new Frame();
+        selected = new Array<SteeringActor>();
 
         camera = new OrthographicCamera();
         world = createWorld();
@@ -103,10 +107,6 @@ public class GameScene {
         for (int i = 0; i < 400; i++) {
             ActorFactory.getRandomZombie(area);
         }
-
-        //buildTarget();
-        //buildZombies();
-        //characters.add(character);
         characters.add(pointer);
     }
 
@@ -114,9 +114,7 @@ public class GameScene {
         hexRenderer.setView(getCamera());
         hexRenderer.render();
         drawFrame();
-        if (drawDebug) {
-            drawShapes(characters);
-        }
+        drawShapes(selected);
         stage.act();
         stage.draw();
     }
@@ -128,6 +126,15 @@ public class GameScene {
             shapeRenderer.setProjectionMatrix(getCamera().combined);
             Gdx.gl.glLineWidth(2);
             shapeRenderer.rect(frame.getPointA().x, frame.getPointA().y, frame.getPointC().x - frame.getPointA().x, frame.getPointC().y -  frame.getPointA().y);
+            shapeRenderer.end();
+            Gdx.gl.glLineWidth(1);
+        }
+        for (SteeringActor obj : selected) {
+            shapeRenderer.begin(ShapeType.Line);
+            shapeRenderer.setColor(obj.getSelectionColor());
+            shapeRenderer.setProjectionMatrix(getCamera().combined);
+            Gdx.gl.glLineWidth(4);
+            shapeRenderer.circle(obj.getPosition().x, obj.getPosition().y, 40);
             shapeRenderer.end();
             Gdx.gl.glLineWidth(1);
         }
@@ -251,6 +258,7 @@ public class GameScene {
 
     public void closeFrame(Vector2 unprojectPosition) {
         frame.setPointC(unprojectPosition);
+        area.selectCharacters(frame.getPointA(), frame.getPointC(), selected, frame.getColor());
         frame.close();
     }
 
