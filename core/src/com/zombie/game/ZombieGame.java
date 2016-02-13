@@ -34,7 +34,7 @@ public class ZombieGame extends ApplicationAdapter {
 
         gameScene = new GameScene();
 
-        InputMultiplexer im = new InputMultiplexer(gameScene.getStage(), uiStage, gameScene.getInputProcessor());
+        InputMultiplexer im = new InputMultiplexer(uiStage, gameScene.getInputProcessor());
         Gdx.input.setInputProcessor(im);
         gameScene.create();
     }

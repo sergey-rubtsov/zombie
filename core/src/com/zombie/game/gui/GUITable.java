@@ -13,9 +13,13 @@ public class GUITable extends Table {
 
     TextButton pauseButton;
     Label testHelpLabel;
+    public static float padding = 15;
 
     public GUITable() {
         super(new Skin(Gdx.files.internal("uiskin.json")));
+        debug(Debug.all);
+        debugAll();
+        pad(padding);
         left().bottom();
         row().height(26);
         //statusBar.add(pauseButton = new PauseButton(translucentPanel, skin)).width(90).left();

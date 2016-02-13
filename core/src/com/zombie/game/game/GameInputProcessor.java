@@ -4,18 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import com.zombie.game.gui.GUITable;
 
 public class GameInputProcessor implements InputProcessor {
-
-    private int mouseButton = -1;
-
-    final Vector2 start = new Vector2();
-    final Vector3 end = new Vector3();
-
-    final Vector3 curr = new Vector3();
-    final Vector3 last = new Vector3(-1, -1, -1);
-    final Vector3 delta = new Vector3();
 
     private GameScene scene;
 
@@ -43,16 +34,14 @@ public class GameInputProcessor implements InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        this.mouseButton = button;
+        System.out.println(screenX + " " + screenY + " " + scene.getUnprojectPosition(screenX, screenY).x + " " + scene.getUnprojectPosition(screenX, screenY).y);
         scene.openFrame(scene.getUnprojectPosition(screenX, screenY), button);
         return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        this.mouseButton = -1;
         scene.closeFrame(scene.getUnprojectPosition(screenX, screenY));
-        last.set(-1, -1, -1);
         return false;
     }
 
@@ -72,36 +61,36 @@ public class GameInputProcessor implements InputProcessor {
         if (amount < 0) {
             scene.scrollCamera(amount);
         } else {
-            if (moveIsPossible()) scene.scrollCamera(amount);
+            if (scrollIsPossible()) scene.scrollCamera(amount);
         }
         return false;
     }
 
     public void processMoveCamera(float deltaTime) {
-        Vector2 point;
-        if (Gdx.input.getX() < 15 || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            point = scene.getUnprojectPosition(0, 0);
-            if (point.x > 0) scene.moveLeftCamera(deltaTime);
+        Vector2 leftBottom = scene.getUnprojectPosition(0, Gdx.graphics.getHeight());
+        Vector2 rightUp = scene.getUnprojectPosition(Gdx.graphics.getWidth(), 0);
+        if (Gdx.input.getX() < GUITable.padding || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            if (((leftBottom.x < 0) && rightUp.x > scene.map.getMapWidth()) || leftBottom.x > 0)
+                scene.moveLeftCamera(deltaTime);
         }
-        if (Gdx.input.getY() < 15 || Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            point = scene.getUnprojectPosition(0, 0);
-            if (point.y < scene.map.getMapHeight()) scene.moveUpCamera(deltaTime);
+        if (Gdx.input.getY() < GUITable.padding || Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            if ((rightUp.y > scene.map.getMapHeight() && (leftBottom.y < 0)) || rightUp.y < scene.map.getMapHeight())
+                scene.moveUpCamera(deltaTime);
         }
-        if (Gdx.input.getX() > Gdx.graphics.getWidth() - 15 || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            point = scene.getUnprojectPosition(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            if (point.x < scene.map.getMapWidth()) scene.moveRightCamera(deltaTime);
+        if (Gdx.input.getX() > Gdx.graphics.getWidth() - GUITable.padding || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            if (((leftBottom.x < 0) && rightUp.x > scene.map.getMapWidth()) || rightUp.x < scene.map.getMapWidth())
+                scene.moveRightCamera(deltaTime);
         }
-        if (Gdx.input.getY() > Gdx.graphics.getHeight() - 15 || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            point = scene.getUnprojectPosition(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            if (point.y > 0) scene.moveDownCamera(deltaTime);
+        if (Gdx.input.getY() > Gdx.graphics.getHeight() - GUITable.padding || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            if ((rightUp.y > scene.map.getMapHeight() && (leftBottom.y < 0))  || leftBottom.y > 0)
+                scene.moveDownCamera(deltaTime);
         }
     }
 
-    public boolean moveIsPossible() {
-        Vector2 point = scene.getUnprojectPosition(0, 0);
-        if (point.x < 0 || point.y < 0) return false;
-        point = scene.getUnprojectPosition(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        if (point.x > scene.map.getMapWidth() || point.y > scene.map.getMapHeight()) return false;
-        return true;
+    public boolean scrollIsPossible() {
+        Vector2 leftBottom = scene.getUnprojectPosition(0, Gdx.graphics.getHeight());
+        Vector2 rightUp = scene.getUnprojectPosition(Gdx.graphics.getWidth(), 0);
+        if (rightUp.x - leftBottom.x < scene.map.getMapWidth() || rightUp.y - leftBottom.y < scene.map.getMapHeight()) return true;
+        return false;
     }
 }
