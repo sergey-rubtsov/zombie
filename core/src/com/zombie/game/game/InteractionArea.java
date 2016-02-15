@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.Array;
-import com.zombie.game.steering.SteeringActor;
+import com.zombie.game.actors.SteeringActor;
 
 public class InteractionArea {
 
@@ -54,10 +54,12 @@ public class InteractionArea {
             float y = actor.getPosition().y;
             if ((a.x < x && x < c.x) || (c.x < x && x < a.x)) {
                 if ((a.y < y && y < c.y) || (c.y < y && y < a.y)) {
-                    actor.setSelectionColor(color);
+                    actor.setGroupColor(color);
                     selected.add(actor);
+                    continue;
                 }
             }
+            actor.deselect();
         }
         return selected;
     }

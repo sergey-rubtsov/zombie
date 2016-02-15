@@ -2,11 +2,8 @@ package com.zombie.game.actors;
 
 import com.badlogic.gdx.ai.steer.behaviors.Arrive;
 import com.badlogic.gdx.ai.utils.Location;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Align;
 import com.zombie.game.game.Assets;
-import com.zombie.game.steering.SteeringActor;
 
 import java.util.Random;
 

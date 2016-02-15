@@ -12,21 +12,21 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.Event;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.Group;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.*;
 import com.zombie.game.actors.ActorFactory;
 import com.zombie.game.actors.Pointer;
-import com.zombie.game.steering.SteeringActor;
+import com.zombie.game.actors.SteeringActor;
 
-public class GameScene {
+public class GameScene implements EventListener {
 
     private static final boolean DEBUG_STAGE = false;
 
-    GameInputProcessor inputProcessor;
+    SceneInputProcessor inputProcessor;
 
     private Pointer pointer;
 
@@ -41,7 +41,7 @@ public class GameScene {
     private World world;
     private Body[] walls;
 
-    public Stage stage;
+    public GameStage stage;
 
     protected Group group;
 
@@ -52,24 +52,28 @@ public class GameScene {
 
     private final Frame frame;
 
-    private final Array<SteeringActor> selected;
+    private final Array<SteeringActor> selectedGreen;
+
+    private final Array<SteeringActor> selectedRed;
+
+    private SteeringActor chosen;
 
     public GameScene() {
-        this.inputProcessor = new GameInputProcessor(this);
+        this.inputProcessor = new SceneInputProcessor(this);
         frame = new Frame();
-        selected = new Array<SteeringActor>();
+        selectedGreen = new Array<SteeringActor>();
+        selectedRed = new Array<SteeringActor>();
 
         camera = new OrthographicCamera();
         world = createWorld();
 
-        this.map = new TiledBackground(100, 100);
+        this.map = new TiledBackground(1);
         Viewport viewport = new ScreenViewport(camera);
-        stage = new Stage(viewport);
+        stage = new GameStage(viewport);
         stage.setDebugAll(DEBUG_STAGE);
         this.pointer = new Pointer();
         this.pointer.getPosition().x = map.getMapWidth() / 2;
         this.pointer.getPosition().y = map.getMapHeight() / 2;
-
     }
 
     public void create() {
@@ -99,12 +103,13 @@ public class GameScene {
         getStage().getRoot().addActorAt(0, group);
         group.setSize(mapWidth, mapHeight);
         group.addActor(pointer);
+        group.addListener(this);
     }
 
     private void buildCharacters() {
         this.characters = new Array<SteeringActor>();
         this.area = new InteractionArea(this.characters, group);
-        for (int i = 0; i < 400; i++) {
+        for (int i = 0; i < 40; i++) {
             ActorFactory.getRandomZombie(area);
         }
         characters.add(pointer);
@@ -113,73 +118,39 @@ public class GameScene {
     public void draw() {
         hexRenderer.setView(getCamera());
         hexRenderer.render();
-        drawFrame();
-        drawShapes(selected);
+        drawShapes();
         stage.act();
         stage.draw();
     }
 
-    public void drawFrame() {
+    public void drawShapes() {
+        shapeRenderer.setProjectionMatrix(getCamera().combined);
         if (frame.isOpened()) {
             shapeRenderer.begin(ShapeType.Line);
+            Gdx.gl.glLineWidth(4);
             shapeRenderer.setColor(frame.getColor());
-            shapeRenderer.setProjectionMatrix(getCamera().combined);
-            Gdx.gl.glLineWidth(2);
             shapeRenderer.rect(frame.getPointA().x, frame.getPointA().y, frame.getPointC().x - frame.getPointA().x, frame.getPointC().y -  frame.getPointA().y);
             shapeRenderer.end();
-            Gdx.gl.glLineWidth(1);
         }
-        for (SteeringActor obj : selected) {
-            shapeRenderer.begin(ShapeType.Line);
-            shapeRenderer.setColor(obj.getSelectionColor());
-            shapeRenderer.setProjectionMatrix(getCamera().combined);
-            Gdx.gl.glLineWidth(4);
-            shapeRenderer.circle(obj.getPosition().x, obj.getPosition().y, 40);
-            shapeRenderer.end();
-            Gdx.gl.glLineWidth(1);
-        }
-    }
-
-    public void drawShapes(Array<SteeringActor> objects) {
-        for (SteeringActor obj : objects) {
-            shapeRenderer.begin(ShapeType.Line);
-            shapeRenderer.setColor(0, 1, 0, 1);
-            shapeRenderer.setProjectionMatrix(getCamera().combined);
-
-            /*float angle = char0Proximity.getAngle() * MathUtils.radiansToDegrees;
-            float radius = obj.getBoundingRadius() / getCamera().zoom;
-            shapeRenderer.arc(obj.getPosition().x, obj.getPosition().y, radius,
-                    obj.getOrientation() * MathUtils.radiansToDegrees, 180);*/
-            shapeRenderer.circle(obj.getPosition().x, obj.getPosition().y, 20);
-            shapeRenderer.end();
-        }
-    }
-
-    public Vector2 screenToStageCoordinates(float screenX, float screenY) {
-        Vector2 pos = new Vector2(screenX, screenY);
-        return getStage().screenToStageCoordinates(pos);
-    }
-
-    public Vector2 stageToLocalCoordinates(float screenX, float screenY) {
-        Vector2 pos = new Vector2(screenX, screenY);
-        pos = getStage().getViewport().project(pos);
-        return pos;
-    }
-
-    protected void setRandomNonOverlappingPosition(SteeringActor character, Array<SteeringActor> others, float minDistanceFromBoundary) {
-        int maxTries = Math.max(100, others.size * others.size);
-        SET_NEW_POS:
-        while (--maxTries >= 0) {
-            character.setPosition(MathUtils.random(getStage().getWidth()), MathUtils.random(getStage().getHeight()), Align.center);
-            character.getPosition().set(character.getX(Align.center), character.getY(Align.center));
-            for (int i = 0; i < others.size; i++) {
-                SteeringActor other = (SteeringActor) others.get(i);
-                if (character.getPosition().dst(other.getPosition()) <= character.getBoundingRadius() + other.getBoundingRadius()
-                        + minDistanceFromBoundary) continue SET_NEW_POS;
+        shapeRenderer.begin(ShapeType.Line);
+        Gdx.gl.glLineWidth(2);
+        if (chosen != null) {
+            if (chosen.isActive()) {
+                shapeRenderer.setColor(Color.GOLD);
+                shapeRenderer.circle(chosen.getPosition().x, chosen.getPosition().y, chosen.getBoundingRadius() * 2f);
+            } else {
+                //shapeRenderer.setColor(chosen.getGroupColor());
+                //shapeRenderer.circle(chosen.getPosition().x, chosen.getPosition().y, chosen.getBoundingRadius());
             }
-            return;
+        } else {
+            for (SteeringActor obj : area.getCharacters()) {
+                if (Color.CLEAR.equals(obj.getGroupColor())) continue;
+                shapeRenderer.setColor(obj.getGroupColor());
+                shapeRenderer.circle(obj.getPosition().x, obj.getPosition().y, obj.getBoundingRadius());
+            }
         }
-        throw new GdxRuntimeException("Probable infinite loop detected");
+        shapeRenderer.end();
+        Gdx.gl.glLineWidth(1);
     }
 
     public void dispose() {
@@ -195,7 +166,7 @@ public class GameScene {
         return camera;
     }
 
-    public Stage getStage() {
+    public GameStage getStage() {
         return stage;
     }
 
@@ -211,6 +182,8 @@ public class GameScene {
     public void scrollCamera(int amount) {
         if (camera.zoom + amount >= 1){
             camera.zoom = camera.zoom + amount;
+            camera.update();
+            //Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         }
     }
 
@@ -246,7 +219,7 @@ public class GameScene {
         camera.position.x = camera.position.x + camera.zoom * 500 * deltaTime;
     }
 
-    public GameInputProcessor getInputProcessor() {
+    public SceneInputProcessor getSceneInputProcessor() {
         return inputProcessor;
     }
 
@@ -258,11 +231,72 @@ public class GameScene {
 
     public void closeFrame(Vector2 unprojectPosition) {
         frame.setPointC(unprojectPosition);
-        area.selectCharacters(frame.getPointA(), frame.getPointC(), selected, frame.getColor());
+        Array<SteeringActor> arr;
+        if (Color.RED == frame.getColor()) {
+            arr = selectedRed;
+        } else {
+            arr = selectedGreen;
+        }
+        area.selectCharacters(frame.getPointA(), frame.getPointC(), arr, frame.getColor());
         frame.close();
     }
 
     public void stretchFrame(Vector2 unprojectPosition) {
         frame.setPointC(unprojectPosition);
+    }
+
+    public Vector2 screenToStageCoordinates(float screenX, float screenY) {
+        Vector2 pos = new Vector2(screenX, screenY);
+        return getStage().screenToStageCoordinates(pos);
+    }
+
+    public Vector2 stageToLocalCoordinates(float screenX, float screenY) {
+        Vector2 pos = new Vector2(screenX, screenY);
+        pos = getStage().getViewport().project(pos);
+        return pos;
+    }
+
+    protected void setRandomNonOverlappingPosition(SteeringActor character, Array<SteeringActor> others, float minDistanceFromBoundary) {
+        int maxTries = Math.max(100, others.size * others.size);
+        SET_NEW_POS:
+        while (--maxTries >= 0) {
+            character.setPosition(MathUtils.random(getStage().getWidth()), MathUtils.random(getStage().getHeight()), Align.center);
+            character.getPosition().set(character.getX(Align.center), character.getY(Align.center));
+            for (int i = 0; i < others.size; i++) {
+                SteeringActor other = (SteeringActor) others.get(i);
+                if (character.getPosition().dst(other.getPosition()) <= character.getBoundingRadius() + other.getBoundingRadius()
+                        + minDistanceFromBoundary) continue SET_NEW_POS;
+            }
+            return;
+        }
+        throw new GdxRuntimeException("Probable infinite loop detected");
+    }
+
+    public Frame getFrame() {
+        return frame;
+    }
+
+    public Array<SteeringActor> getSelectedGreen() {
+        return selectedGreen;
+    }
+
+    public Array<SteeringActor> getSelectedRed() {
+        return selectedRed;
+    }
+
+    public SteeringActor getChosen() {
+        return chosen;
+    }
+
+    public void setChosen(SteeringActor chosen) {
+        this.chosen = chosen;
+    }
+
+    @Override
+    public boolean handle(Event event) {
+        if (event instanceof ActorEvent) {
+            chosen = ((ActorEvent) event).getSteeringActor();
+        }
+        return true;
     }
 }

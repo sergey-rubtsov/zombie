@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.zombie.game.steering;
+package com.zombie.game.actors;
 
 import com.badlogic.gdx.ai.steer.Steerable;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
@@ -26,9 +26,12 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Event;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.Align;
-
-import java.util.Random;
+import com.zombie.game.game.ActorEvent;
+import com.zombie.game.steering.Scene2dLocation;
+import com.zombie.game.steering.Scene2dSteeringUtils;
 
 /** A SteeringActor is a scene2d {@link Actor} implementing the {@link Steerable} interface.
  *
@@ -44,7 +47,8 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
     float angularVelocity;
     float boundingRadius;
     boolean tagged;
-    Color selectionColor = Color.CLEAR;
+    Color groupColor = Color.CLEAR;
+    boolean active = false;
 
     float maxLinearSpeed = 100;
     float maxLinearAcceleration = 200;
@@ -275,18 +279,34 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
                 getRotation());
     }
 
-    public float range(float max) {
-        Random r = new Random();
-        float result = max / 5;
-        result = r.nextInt(Math.round(max - result));
-        return result + (max / 5);
+    public Color getGroupColor() {
+        return groupColor;
     }
 
-    public Color getSelectionColor() {
-        return selectionColor;
+    public void setGroupColor(Color groupColor) {
+        this.groupColor = groupColor;
     }
 
-    public void setSelectionColor(Color selectionColor) {
-        this.selectionColor = selectionColor;
+    @Override
+    public boolean fire(Event event) {
+        if (event instanceof InputEvent) {
+            event.stop();
+            ActorEvent actorEvent = new ActorEvent();
+            actorEvent.setSteeringActor(this);
+            if (((InputEvent) event).getType() == InputEvent.Type.exit) {
+                this.active = false;
+            } else this.active = true;
+            return super.fire(actorEvent);
+        }
+        return super.fire(event);
     }
+
+    public void deselect() {
+        this.groupColor = Color.CLEAR;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
 }

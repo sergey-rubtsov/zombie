@@ -7,7 +7,6 @@ import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.zombie.game.game.GameInputProcessor;
 import com.zombie.game.gui.GUITable;
 import com.zombie.game.game.GameScene;
 
@@ -34,7 +33,7 @@ public class ZombieGame extends ApplicationAdapter {
 
         gameScene = new GameScene();
 
-        InputMultiplexer im = new InputMultiplexer(uiStage, gameScene.getInputProcessor());
+        InputMultiplexer im = new InputMultiplexer(uiStage, gameScene.getSceneInputProcessor(), gameScene.getStage());
         Gdx.input.setInputProcessor(im);
         gameScene.create();
     }

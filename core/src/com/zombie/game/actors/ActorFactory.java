@@ -10,7 +10,6 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.zombie.game.game.Assets;
 import com.zombie.game.game.InteractionArea;
-import com.zombie.game.steering.SteeringActor;
 
 import java.util.Random;
 
