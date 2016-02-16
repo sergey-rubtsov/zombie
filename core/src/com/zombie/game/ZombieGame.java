@@ -4,9 +4,11 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ai.GdxAI;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.zombie.game.gui.GUITable;
 import com.zombie.game.game.GameScene;
 
@@ -27,8 +29,9 @@ public class ZombieGame extends ApplicationAdapter {
         uiStage.getViewport().setCamera(uiCamera);
 
         uiCamera.update();
+        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
         // Create status bar
-        statusBar = new GUITable();
+        statusBar = new GUITable(skin, uiStage);
         uiStage.addActor(statusBar);
 
         gameScene = new GameScene();

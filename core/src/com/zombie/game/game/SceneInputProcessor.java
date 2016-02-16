@@ -3,7 +3,6 @@ package com.zombie.game.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.zombie.game.actors.SteeringActor;
@@ -40,7 +39,8 @@ public class SceneInputProcessor implements InputProcessor {
         Vector2 clickPoint = scene.getUnprojectPosition(screenX, screenY);
         Actor a = scene.area.getGroup().hit(clickPoint.x, clickPoint.y, true);
         if (a instanceof SteeringActor) {
-            scene.setChosen((SteeringActor) a);
+            scene.getGreenMob().deleteActors();
+            scene.getGreenMob().addActor((SteeringActor) a);
         } else scene.openFrame(scene.getUnprojectPosition(screenX, screenY), button);
         return true;
     }

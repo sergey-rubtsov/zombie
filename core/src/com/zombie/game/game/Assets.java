@@ -1,13 +1,18 @@
 package com.zombie.game.game;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 public class Assets {
 
     static {
         load();
     }
+
+    //public static Skin skin = new Skin(new FileHandle("data/uiskin.json"));
 
     public static Texture charactersTexture;
     public static Texture zombiesTexture;

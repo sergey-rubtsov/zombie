@@ -15,12 +15,13 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.Group;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.*;
 import com.zombie.game.actors.ActorFactory;
+import com.zombie.game.actors.Mob;
 import com.zombie.game.actors.Pointer;
 import com.zombie.game.actors.SteeringActor;
+import com.zombie.game.events.ActorHighlightedEvent;
 
 public class GameScene implements EventListener {
 
@@ -52,17 +53,17 @@ public class GameScene implements EventListener {
 
     private final Frame frame;
 
-    private final Array<SteeringActor> selectedGreen;
+    private final Mob greenMob;
 
-    private final Array<SteeringActor> selectedRed;
+    private final Mob redMob;
 
-    private SteeringActor chosen;
+    private SteeringActor higlighted;
 
     public GameScene() {
         this.inputProcessor = new SceneInputProcessor(this);
         frame = new Frame();
-        selectedGreen = new Array<SteeringActor>();
-        selectedRed = new Array<SteeringActor>();
+        greenMob = new Mob(Color.GREEN);
+        redMob = new Mob(Color.RED);
 
         camera = new OrthographicCamera();
         world = createWorld();
@@ -86,6 +87,7 @@ public class GameScene implements EventListener {
         camera.zoom = 5;
         camera.position.x = getMap().getMapWidth() / 2;
         camera.position.y = getMap().getMapHeight() / 2;
+        Gdx.input.setCursorPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
     }
 
     public void buildGroup(int mapWidth, int mapHeight) {
@@ -129,25 +131,22 @@ public class GameScene implements EventListener {
             shapeRenderer.begin(ShapeType.Line);
             Gdx.gl.glLineWidth(4);
             shapeRenderer.setColor(frame.getColor());
-            shapeRenderer.rect(frame.getPointA().x, frame.getPointA().y, frame.getPointC().x - frame.getPointA().x, frame.getPointC().y -  frame.getPointA().y);
+            shapeRenderer.rect(frame.getPointA().x, frame.getPointA().y, frame.getPointC().x - frame.getPointA().x, frame.getPointC().y - frame.getPointA().y);
             shapeRenderer.end();
         }
         shapeRenderer.begin(ShapeType.Line);
         Gdx.gl.glLineWidth(2);
-        if (chosen != null) {
-            if (chosen.isActive()) {
-                shapeRenderer.setColor(Color.GOLD);
-                shapeRenderer.circle(chosen.getPosition().x, chosen.getPosition().y, chosen.getBoundingRadius() * 2f);
-            } else {
-                //shapeRenderer.setColor(chosen.getGroupColor());
-                //shapeRenderer.circle(chosen.getPosition().x, chosen.getPosition().y, chosen.getBoundingRadius());
-            }
-        } else {
-            for (SteeringActor obj : area.getCharacters()) {
-                if (Color.CLEAR.equals(obj.getGroupColor())) continue;
-                shapeRenderer.setColor(obj.getGroupColor());
-                shapeRenderer.circle(obj.getPosition().x, obj.getPosition().y, obj.getBoundingRadius());
-            }
+        if (higlighted != null && higlighted.isActive()) {
+            shapeRenderer.setColor(Color.GOLD);
+            shapeRenderer.circle(higlighted.getPosition().x, higlighted.getPosition().y, higlighted.getBoundingRadius() * 2f);
+        }
+        for (SteeringActor obj : greenMob.getActors()) {
+            shapeRenderer.setColor(greenMob.getColor());
+            shapeRenderer.circle(obj.getPosition().x, obj.getPosition().y, obj.getBoundingRadius());
+        }
+        for (SteeringActor obj : redMob.getActors()) {
+            shapeRenderer.setColor(redMob.getColor());
+            shapeRenderer.circle(obj.getPosition().x, obj.getPosition().y, obj.getBoundingRadius());
         }
         shapeRenderer.end();
         Gdx.gl.glLineWidth(1);
@@ -227,17 +226,19 @@ public class GameScene implements EventListener {
         frame.setPointA(unprojectPosition);
         frame.setColor(button);
         frame.open();
+        redMob.deleteActors();
+        greenMob.deleteActors();
     }
 
     public void closeFrame(Vector2 unprojectPosition) {
         frame.setPointC(unprojectPosition);
-        Array<SteeringActor> arr;
+        Mob mob;
         if (Color.RED == frame.getColor()) {
-            arr = selectedRed;
+            mob = redMob;
         } else {
-            arr = selectedGreen;
+            mob = greenMob;
         }
-        area.selectCharacters(frame.getPointA(), frame.getPointC(), arr, frame.getColor());
+        enrollCharacters(frame.getPointA(), frame.getPointC(), area.getCharacters(), mob);
         frame.close();
     }
 
@@ -276,27 +277,43 @@ public class GameScene implements EventListener {
         return frame;
     }
 
-    public Array<SteeringActor> getSelectedGreen() {
-        return selectedGreen;
+    public SteeringActor getHiglighted() {
+        return higlighted;
     }
 
-    public Array<SteeringActor> getSelectedRed() {
-        return selectedRed;
-    }
-
-    public SteeringActor getChosen() {
-        return chosen;
-    }
-
-    public void setChosen(SteeringActor chosen) {
-        this.chosen = chosen;
+    public void setHiglighted(SteeringActor higlighted) {
+        this.higlighted = higlighted;
     }
 
     @Override
     public boolean handle(Event event) {
-        if (event instanceof ActorEvent) {
-            chosen = ((ActorEvent) event).getSteeringActor();
+        if (event instanceof ActorHighlightedEvent) {
+            higlighted = ((ActorHighlightedEvent) event).getSteeringActor();
         }
         return true;
+    }
+
+    public Mob getGreenMob() {
+        return greenMob;
+    }
+
+    public Mob addCharactersToMob(Vector2 a, Vector2 c, Array<SteeringActor> characters, Mob mob) {
+        for (SteeringActor actor : characters) {
+            actor.deselect();
+            float x = actor.getPosition().x;
+            float y = actor.getPosition().y;
+            if ((a.x < x && x < c.x) || (c.x < x && x < a.x)) {
+                if ((a.y < y && y < c.y) || (c.y < y && y < a.y)) {
+                    mob.addActor(actor);
+                    continue;
+                }
+            }
+        }
+        return mob;
+    }
+
+    public Mob enrollCharacters(Vector2 a, Vector2 c, Array<SteeringActor> characters, Mob mob) {
+        mob.deleteActors();
+        return addCharactersToMob(a, c, characters, mob);
     }
 }

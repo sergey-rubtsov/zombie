@@ -1,12 +1,13 @@
-package com.zombie.game.game;
+package com.zombie.game.events;
 
+import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.zombie.game.actors.SteeringActor;
 
 /**
  * Created by Serg on 15.02.2016.
  */
-public class ActorEvent extends InputEvent {
+public class ActorHighlightedEvent extends Event {
 
     private SteeringActor steeringActor;
 

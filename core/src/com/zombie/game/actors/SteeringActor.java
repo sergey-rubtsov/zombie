@@ -29,7 +29,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.Align;
-import com.zombie.game.game.ActorEvent;
+import com.zombie.game.events.ActorHighlightedEvent;
 import com.zombie.game.steering.Scene2dLocation;
 import com.zombie.game.steering.Scene2dSteeringUtils;
 
@@ -47,8 +47,8 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
     float angularVelocity;
     float boundingRadius;
     boolean tagged;
-    Color groupColor = Color.CLEAR;
     boolean active = false;
+    Mob mob = null;
 
     float maxLinearSpeed = 100;
     float maxLinearAcceleration = 200;
@@ -279,34 +279,34 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
                 getRotation());
     }
 
-    public Color getGroupColor() {
-        return groupColor;
-    }
-
-    public void setGroupColor(Color groupColor) {
-        this.groupColor = groupColor;
-    }
-
     @Override
     public boolean fire(Event event) {
         if (event instanceof InputEvent) {
+            InputEvent.Type t = ((InputEvent) event).getType();
             event.stop();
-            ActorEvent actorEvent = new ActorEvent();
+            ActorHighlightedEvent actorEvent = new ActorHighlightedEvent();
             actorEvent.setSteeringActor(this);
-            if (((InputEvent) event).getType() == InputEvent.Type.exit) {
-                this.active = false;
-            } else this.active = true;
-            return super.fire(actorEvent);
+            if (t != InputEvent.Type.exit) {
+                this.active = true;
+                return super.fire(actorEvent);
+            } this.active = false;
         }
         return super.fire(event);
-    }
-
-    public void deselect() {
-        this.groupColor = Color.CLEAR;
     }
 
     public boolean isActive() {
         return active;
     }
 
+    public Mob getMob() {
+        return mob;
+    }
+
+    public void setMob(Mob mob) {
+        this.mob = mob;
+    }
+
+    public void deselect() {
+        mob = null;
+    }
 }
