@@ -1,10 +1,10 @@
 package com.zombie.game.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class Assets {
 
@@ -12,7 +12,7 @@ public class Assets {
         load();
     }
 
-    //public static Skin skin = new Skin(new FileHandle("data/uiskin.json"));
+    public static TextureRegionDrawable[] buttonAttack;
 
     public static Texture charactersTexture;
     public static Texture zombiesTexture;
@@ -24,11 +24,14 @@ public class Assets {
 
     public static TextureRegion target;
 
+    public static BitmapFont font;
+
     public static void load() {
-        charactersTexture = new Texture("data/npc/characters.png");
-        zombiesTexture = new Texture("data/npc/zombies.png");
-        hexture = new Texture("data/hexes.png");
-        grass = new Texture("data/grass.png");
+        font = new BitmapFont(Gdx.files.internal("black_molot.fnt"), Gdx.files.internal("black_molot_0.png"), false);
+        charactersTexture = new Texture(Gdx.files.internal("characters.png"));
+        zombiesTexture = new Texture(Gdx.files.internal("zombies.png"));
+        hexture = new Texture(Gdx.files.internal("hexes.png"));
+        grass = new Texture(Gdx.files.internal("grass.png"));
         characters = new TextureRegion[4][12];
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 12; j++) {
@@ -41,9 +44,16 @@ public class Assets {
                 zombies[i][j] = new TextureRegion(zombiesTexture, i * 101 + 3, j * 95, 75, 90);
             }
         }
-        target = new TextureRegion(new Texture("data/target.png"));
-        //hexes = TextureRegion.split(hexture, 112, 97);
+        target = new TextureRegion(new Texture(Gdx.files.internal("target.png")));
         hexes = TextureRegion.split(grass, 112, 97);
+        TextureRegion daUp = new TextureRegion(new Texture(Gdx.files.internal("daUp50.png")));
+        TextureRegion daChecked = new TextureRegion( new Texture(Gdx.files.internal("daChecked50.png")));
+        TextureRegion daDown = new TextureRegion( new Texture(Gdx.files.internal("daDown50.png")));
+        buttonAttack = new TextureRegionDrawable[]{
+            new TextureRegionDrawable(daUp),
+            new TextureRegionDrawable(daChecked),
+            new TextureRegionDrawable(daDown)
+        };
     }
 
 }
