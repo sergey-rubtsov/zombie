@@ -5,6 +5,9 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.zombie.game.gui.buttons.PauseButton;
+import com.zombie.game.gui.buttons.WarButton;
+import com.zombie.game.gui.labels.FpsLabel;
 import com.zombie.game.gui.styles.GameLabelStyle;
 import com.zombie.game.gui.styles.GameTextButtonStyle;
 
@@ -23,7 +26,12 @@ public class GUITable extends Table {
         super.setStage(uiStage);
         debug(Debug.all);
         debugAll();
-        pad(padding * 2);
+
+        padTop(padding * 2);
+        padLeft(padding * 2);
+        padRight(padding * 2);
+        padBottom(padding * 3);
+
         setWidth(uiStage.getWidth());
         setHeight(uiStage.getHeight());
         Table upContainer = new Table();
@@ -47,8 +55,8 @@ public class GUITable extends Table {
         upContainer.add(pauseButton = new PauseButton(translucentPanel, new GameTextButtonStyle())).width(90).left();
         upContainer.add(testHelpLabel = new Label("test", new GameLabelStyle())).padLeft(15);
         bottomContainer.add(attackButton = new WarButton()).padLeft(5);
-        bottomContainer.add(testHelpLabel = new Label("test", new GameLabelStyle())).padLeft(15);
-        bottomContainer.add(testHelpLabel = new Label("test", new GameLabelStyle())).padLeft(15);
+        bottomContainer.add(testHelpLabel = new Label("abc", new GameLabelStyle())).padLeft(15);
+        bottomContainer.add(testHelpLabel = new Label("абвгдеёжзиклмнопрстуфхцчшщьъыэюя", new GameLabelStyle())).padLeft(15);
 
         uiStage.addActor(translucentPanel);
     }

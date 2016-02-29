@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer;
@@ -49,7 +50,7 @@ public class GameScene implements EventListener {
     InteractionArea area;
 
     private float lastUpdateTime;
-    OrthographicCamera camera;
+    GameCamera camera;
 
     private final Frame frame;
 
@@ -65,7 +66,8 @@ public class GameScene implements EventListener {
         greenMob = new Mob(Color.GREEN);
         redMob = new Mob(Color.RED);
 
-        camera = new OrthographicCamera();
+        camera = new GameCamera();
+
         world = createWorld();
 
         this.map = new TiledBackground(1);
@@ -84,7 +86,6 @@ public class GameScene implements EventListener {
         hexRenderer = new HexagonalTiledMapRenderer(map);
         shapeRenderer = new ShapeRenderer();
         drawDebug = true;
-        camera.zoom = 5;
         camera.position.x = getMap().getMapWidth() / 2;
         camera.position.y = getMap().getMapHeight() / 2;
         Gdx.input.setCursorPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);

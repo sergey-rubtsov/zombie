@@ -28,6 +28,7 @@ public class Assets {
 
     public static void load() {
         font = new BitmapFont(Gdx.files.internal("black_molot.fnt"), Gdx.files.internal("black_molot_0.png"), false);
+        font.getData().setScale(0.8f);
         charactersTexture = new Texture(Gdx.files.internal("characters.png"));
         zombiesTexture = new Texture(Gdx.files.internal("zombies.png"));
         hexture = new Texture(Gdx.files.internal("hexes.png"));
