@@ -2,9 +2,9 @@ package com.zombie.game.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.GdxAI;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer;
@@ -58,7 +58,7 @@ public class GameScene implements EventListener {
 
     private final Mob redMob;
 
-    private SteeringActor higlighted;
+    private SteeringActor highlighted;
 
     public GameScene() {
         this.inputProcessor = new SceneInputProcessor(this);
@@ -119,7 +119,9 @@ public class GameScene implements EventListener {
     }
 
     public void draw() {
-        hexRenderer.setView(getCamera());
+        float width = camera.viewportWidth * camera.zoom;
+        float height = camera.viewportHeight * camera.zoom;
+        hexRenderer.setView(camera.combined, camera.position.x - width / 2, camera.position.y - height / 2, width, height);
         hexRenderer.render();
         drawShapes();
         stage.act();
@@ -137,9 +139,9 @@ public class GameScene implements EventListener {
         }
         shapeRenderer.begin(ShapeType.Line);
         Gdx.gl.glLineWidth(2);
-        if (higlighted != null && higlighted.isActive()) {
+        if (highlighted != null && highlighted.isActive()) {
             shapeRenderer.setColor(Color.GOLD);
-            shapeRenderer.circle(higlighted.getPosition().x, higlighted.getPosition().y, higlighted.getBoundingRadius() * 2f);
+            shapeRenderer.circle(highlighted.getPosition().x, highlighted.getPosition().y, highlighted.getBoundingRadius() * 2f);
         }
         for (SteeringActor obj : greenMob.getActors()) {
             shapeRenderer.setColor(greenMob.getColor());
@@ -162,7 +164,7 @@ public class GameScene implements EventListener {
         hexRenderer.dispose();
     }
 
-    public OrthographicCamera getCamera() {
+    public Camera getCamera() {
         return camera;
     }
 
@@ -278,18 +280,18 @@ public class GameScene implements EventListener {
         return frame;
     }
 
-    public SteeringActor getHiglighted() {
-        return higlighted;
+    public SteeringActor getHighlighted() {
+        return highlighted;
     }
 
-    public void setHiglighted(SteeringActor higlighted) {
-        this.higlighted = higlighted;
+    public void setHighlighted(SteeringActor highlighted) {
+        this.highlighted = highlighted;
     }
 
     @Override
     public boolean handle(Event event) {
         if (event instanceof ActorHighlightedEvent) {
-            higlighted = ((ActorHighlightedEvent) event).getSteeringActor();
+            highlighted = ((ActorHighlightedEvent) event).getSteeringActor();
         }
         return true;
     }
