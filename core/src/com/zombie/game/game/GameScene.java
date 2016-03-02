@@ -66,7 +66,7 @@ public class GameScene implements EventListener {
         greenMob = new Mob(Color.GREEN);
         redMob = new Mob(Color.RED);
 
-        camera = new GameCamera();
+        camera = new GameCamera(this);
 
         world = createWorld();
 
@@ -182,10 +182,10 @@ public class GameScene implements EventListener {
     }
 
     public void scrollCamera(int amount) {
-        if (camera.zoom + amount >= 1){
-            camera.zoom = camera.zoom + amount;
-            camera.update();
-            //Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        if (amount < 0) {
+            camera.scrollCamera(amount);
+        } else {
+            if (camera.scrollIsPossible()) camera.scrollCamera(amount);
         }
     }
 
@@ -202,23 +202,7 @@ public class GameScene implements EventListener {
     public void update(float deltaTime) {
         // Update box2d world
         world.step(deltaTime, 8, 3);
-        inputProcessor.processMoveCamera(deltaTime);
-    }
-
-    public void moveUpCamera(float deltaTime) {
-        camera.position.y = camera.position.y + camera.zoom * 500 * deltaTime;
-    }
-
-    public void moveDownCamera(float deltaTime) {
-        camera.position.y = camera.position.y - camera.zoom * 500 * deltaTime;
-    }
-
-    public void moveLeftCamera(float deltaTime) {
-        camera.position.x = camera.position.x - camera.zoom * 500 * deltaTime;
-    }
-
-    public void moveRightCamera(float deltaTime) {
-        camera.position.x = camera.position.x + camera.zoom * 500 * deltaTime;
+        camera.processMoveCamera(deltaTime);
     }
 
     public SceneInputProcessor getSceneInputProcessor() {
@@ -247,17 +231,6 @@ public class GameScene implements EventListener {
 
     public void stretchFrame(Vector2 unprojectPosition) {
         frame.setPointC(unprojectPosition);
-    }
-
-    public Vector2 screenToStageCoordinates(float screenX, float screenY) {
-        Vector2 pos = new Vector2(screenX, screenY);
-        return getStage().screenToStageCoordinates(pos);
-    }
-
-    public Vector2 stageToLocalCoordinates(float screenX, float screenY) {
-        Vector2 pos = new Vector2(screenX, screenY);
-        pos = getStage().getViewport().project(pos);
-        return pos;
     }
 
     protected void setRandomNonOverlappingPosition(SteeringActor character, Array<SteeringActor> others, float minDistanceFromBoundary) {
