@@ -2,9 +2,13 @@ package com.zombie.game.actors;
 
 import com.badlogic.gdx.ai.steer.behaviors.*;
 import com.badlogic.gdx.ai.steer.proximities.FieldOfViewProximity;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
@@ -18,6 +22,19 @@ import java.util.Random;
  */
 public class ActorFactory {
 
+    static {
+        initAssets();
+    }
+
+    public static AssetManager assetManager;
+
+    public static void initAssets() {
+        assetManager = new AssetManager();
+        assetManager.load("robot1/robot1.g3db", Model.class);
+        assetManager.load("human.g3db", Model.class);
+        assetManager.load("walking_3.g3db", Model.class);
+    }
+
     public static Zombie getRandomZombie(Array<FieldOfViewProximity<Vector2>> proximities,
                                          Array<SteeringActor> characters, Array<BlendedSteering<Vector2>> blendedSteerings,
                                         Group group) {
@@ -25,10 +42,19 @@ public class ActorFactory {
         Zombie zombie = new Zombie(tr);
 
         zombie.setPosition(MathUtils.random(group.getWidth()), MathUtils.random(group.getHeight()), Align.center);
-        zombie.setMaxLinearSpeed(70);
+        zombie.setMaxLinearSpeed(40);
         zombie.setMaxLinearAcceleration(400); //
         zombie.setMaxAngularAcceleration(0);
         zombie.setMaxAngularSpeed(5);
+
+        while (true) {
+            if (assetManager.update()) {
+                ModelInstance instance = new ModelInstance(assetManager.get("human.g3db", Model.class));
+                //instance.transform.rotate(Vector3.X, 60);
+                zombie.setInstance(instance);
+                break;
+            }
+        }
 
         FieldOfViewProximity<Vector2> proximity = new FieldOfViewProximity<Vector2>(zombie, characters, 140,
                 270 * MathUtils.degreesToRadians);

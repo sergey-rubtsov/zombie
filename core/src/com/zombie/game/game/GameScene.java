@@ -2,9 +2,18 @@ package com.zombie.game.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.GdxAI;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer;
@@ -37,10 +46,26 @@ public class GameScene implements EventListener {
     boolean drawDebug;
 
     TiledBackground map;
+
     HexagonalTiledMapRenderer hexRenderer;
+
     ShapeRenderer shapeRenderer;
 
+    AssetManager assetManager;
+
+    /** Environment that describes the lights etc. */
+    private Environment environment;
+
+    /** Model batch that renders our models */
+    private ModelBatch modelBatch;
+
+    SpriteBatch spriteBatch = new SpriteBatch();
+
+    /** Scene light */
+    private DirectionalLight light;
+
     private World world;
+
     private Body[] walls;
 
     public GameStage stage;
@@ -80,10 +105,18 @@ public class GameScene implements EventListener {
     }
 
     public void create() {
+        //Create our environment
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
+        light = new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f);
+        environment.add(light);
+
+        //Initialize batches and fonts
+        modelBatch = new ModelBatch();
         world = createWorld();
         buildGroup(map.getMapWidth(), map.getMapHeight());
         buildCharacters();
-        hexRenderer = new HexagonalTiledMapRenderer(map);
+        hexRenderer = new HexagonalTiledMapRenderer(map, spriteBatch);
         shapeRenderer = new ShapeRenderer();
         drawDebug = true;
         camera.position.x = getMap().getMapWidth() / 2;
@@ -111,7 +144,7 @@ public class GameScene implements EventListener {
 
     private void buildCharacters() {
         this.characters = new Array<SteeringActor>();
-        this.area = new InteractionArea(this.characters, group);
+        this.area = new InteractionArea(this, group);
         for (int i = 0; i < 40; i++) {
             ActorFactory.getRandomZombie(area);
         }
@@ -119,13 +152,31 @@ public class GameScene implements EventListener {
     }
 
     public void draw() {
+        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         float width = camera.viewportWidth * camera.zoom;
         float height = camera.viewportHeight * camera.zoom;
         hexRenderer.setView(camera.combined, camera.position.x - width / 2, camera.position.y - height / 2, width, height);
         hexRenderer.render();
+        drawModels();
         drawShapes();
         stage.act();
-        stage.draw();
+        //stage.draw();
+    }
+
+    private void drawModels() {
+        //Project light towards the object from our viewpoint
+        light.direction.set(camera.direction);
+        modelBatch.begin(camera);
+        for (SteeringActor actor : this.characters) {
+            //Update animation
+            if(actor.getAnimationController() != null)
+                actor.getAnimationController().update(Gdx.graphics.getDeltaTime());
+            //Render model
+            if(actor.getInstance() != null) modelBatch.render(actor.getInstance(), environment);
+        }
+        modelBatch.end();
     }
 
     public void drawShapes() {

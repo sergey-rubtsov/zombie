@@ -1,5 +1,6 @@
 package com.zombie.game.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -15,19 +16,19 @@ public class SceneInputProcessor implements InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
-        System.out.println("keyDown:" + keycode);
+        Gdx.app.log("INFO","keycode " + keycode);
         return false;
     }
 
     @Override
     public boolean keyUp(int keycode) {
-        System.out.println("keyUp:" + keycode);
+        Gdx.app.log("INFO","keycode " + keycode);
         return false;
     }
 
     @Override
     public boolean keyTyped(char character) {
-        System.out.println("keyTyped:" + character);
+        Gdx.app.log("INFO","character " + character);
         return false;
     }
 

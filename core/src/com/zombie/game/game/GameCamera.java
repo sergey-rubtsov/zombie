@@ -3,7 +3,6 @@ package com.zombie.game.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.zombie.game.gui.GUITable;
 
@@ -12,22 +11,14 @@ import com.zombie.game.gui.GUITable;
  */
 public class GameCamera extends OrthographicCamera {
 
-    //it will render 3D models
-    PerspectiveCamera modelsCamera;
-
     GameScene scene;
 
     public GameCamera(GameScene scene) {
         super();
         this.scene = scene;
-        zoom = 5;
-        //Initialize the modelsCamera
-        modelsCamera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        modelsCamera.position.set(10f, 10f, 10f);
-        modelsCamera.lookAt(0,0,0);
-        modelsCamera.near = 1f;
-        modelsCamera.far = 300f;
-        modelsCamera.update();
+        near = -1000f;
+        far = 1000f;
+        update();
     }
 
     public void moveUpCamera(float deltaTime) {
@@ -75,6 +66,7 @@ public class GameCamera extends OrthographicCamera {
     }
 
     public void scrollCamera(int amount) {
+        //Gdx.app.log("INFO","this.position.z " + this.position.z);
         if (amount < 0) {
             changeZoom(amount);
         } else {
@@ -89,4 +81,5 @@ public class GameCamera extends OrthographicCamera {
             //Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         }
     }
+
 }

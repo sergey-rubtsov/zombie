@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -24,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener;
+import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Vector3;
 
 public class LibgdxModelViewer extends ApplicationAdapter implements AnimationListener {
@@ -32,7 +34,8 @@ public class LibgdxModelViewer extends ApplicationAdapter implements AnimationLi
     private Environment environment;
 
     /** GL camera */
-    private PerspectiveCamera camera;
+    //private PerspectiveCamera camera;
+    private OrthographicCamera camera;
 
     /** Gesture processor that moves the camera */
     private CameraInputController camController;
@@ -47,10 +50,10 @@ public class LibgdxModelViewer extends ApplicationAdapter implements AnimationLi
     private BitmapFont font;
 
     /** The model to render */
-    private Model model;
+    private Model model, secondModel, zombieModel;
 
     /** Instance of our model */
-    private ModelInstance instance;
+    private ModelInstance instance, secondInstance, zombieInstance;
 
     /** X axis arrow instance */
     private ModelInstance xi;
@@ -75,6 +78,7 @@ public class LibgdxModelViewer extends ApplicationAdapter implements AnimationLi
 
     /** Model filename */
     private String modelName = "human.g3db";
+    //private String modelName = "robot1/robot1.g3db";
 
     /** Index of the current animation */
     private int currentAnimation = -1;
@@ -85,6 +89,7 @@ public class LibgdxModelViewer extends ApplicationAdapter implements AnimationLi
         //Load our model
         assetManager = new AssetManager();
         assetManager.load(modelName, Model.class);
+        assetManager.load("walking_3.g3db", Model.class);
 
         //Create our environment
         environment = new Environment();
@@ -98,28 +103,48 @@ public class LibgdxModelViewer extends ApplicationAdapter implements AnimationLi
         font = new BitmapFont();
 
         //Initialize the camera
-        camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.position.set(10f, 10f, 10f);
-        camera.lookAt(0,0,0);
-        camera.near = 1f;
-        camera.far = 300f;
+/*        camera = new PerspectiveCamera(5f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.position.set(0f, 0f, 200f);*/
+        //camera = new PerspectiveCamera(10f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.position.set(0f, 0f, 0f);
+        camera.zoom = 3f;
+        Matrix3 m = new Matrix3();
+        m.val[m.M00] = 1;
+        m.val[m.M10] = 0;
+        m.val[m.M20] = 0;
+        m.val[m.M01] = 0;
+        m.val[m.M11] = 1;
+        m.val[m.M21] = 0;
+        m.val[m.M02] = 0.5f * 0.70710678118654752440084436210485f;
+        m.val[m.M12] = 0.5f * 0.70710678118654752440084436210485f;
+        m.val[m.M22] = 0;
+        //camera.view.set(m);
+        //camera.projection.set(m);
+        //camera.combined.set(m);
+        //camera.lookAt(0,0,0);
+        camera.near = -1000f;
+        camera.far = 1000f;
         camera.update();
 
         //Create X,Y,Z frame arrows
         ModelBuilder modelBuilder = new ModelBuilder();
-        Model x = modelBuilder.createArrow(new Vector3(0,0,0), new Vector3(10,0,0),
+        Model x = modelBuilder.createArrow(new Vector3(0,0,0), new Vector3(100,0,0),
                 new Material(ColorAttribute.createDiffuse(Color.RED)),
                 Usage.Position | Usage.Normal);
+        //width
         xi = new ModelInstance(x);
 
-        Model y = modelBuilder.createArrow(new Vector3(0,0,0), new Vector3(0,10,0),
+        Model y = modelBuilder.createArrow(new Vector3(0,0,0), new Vector3(0,100,0),
                 new Material(ColorAttribute.createDiffuse(Color.GREEN)),
                 Usage.Position | Usage.Normal);
+        //height
         yi = new ModelInstance(y);
 
-        Model z = modelBuilder.createArrow(new Vector3(0,0,0), new Vector3(0,0,10),
+        Model z = modelBuilder.createArrow(new Vector3(0,0,0), new Vector3(0,0,100),
                 new Material(ColorAttribute.createDiffuse(Color.BLUE)),
                 Usage.Position | Usage.Normal);
+        //deep
         zi = new ModelInstance(z);
 
         //Initialize the gesture processor
@@ -134,10 +159,25 @@ public class LibgdxModelViewer extends ApplicationAdapter implements AnimationLi
 
         //Get our model
         model = assetManager.get(modelName, Model.class);
+        zombieModel = assetManager.get("walking_3.g3db", Model.class);
         instance = new ModelInstance(model);
+        secondInstance = new ModelInstance(model, new Vector3(0f, 0f, 20f));
+        zombieInstance = new ModelInstance(zombieModel, new Vector3(0f, 0f, 50f));
 
         //Disable backface culling and enable alpha test and blending
         for(Material m : instance.materials){
+            m.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_NONE));
+            m.set(new FloatAttribute(FloatAttribute.AlphaTest, 0.5f));
+            m.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+        }
+
+        for(Material m : secondInstance.materials){
+            m.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_NONE));
+            m.set(new FloatAttribute(FloatAttribute.AlphaTest, 0.5f));
+            m.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+        }
+
+        for(Material m : zombieInstance.materials){
             m.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_NONE));
             m.set(new FloatAttribute(FloatAttribute.AlphaTest, 0.5f));
             m.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
@@ -178,6 +218,10 @@ public class LibgdxModelViewer extends ApplicationAdapter implements AnimationLi
         modelBatch.begin(camera);
         if(instance != null)
             modelBatch.render(instance, environment);
+        if(secondInstance != null)
+            modelBatch.render(secondInstance, environment);
+        if(zombieInstance != null)
+            modelBatch.render(zombieInstance, environment);
         modelBatch.render(xi,environment);
         modelBatch.render(yi,environment);
         modelBatch.render(zi,environment);

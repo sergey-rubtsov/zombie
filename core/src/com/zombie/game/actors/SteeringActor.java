@@ -21,10 +21,16 @@ import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.ai.utils.Location;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
+import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -36,13 +42,25 @@ import com.zombie.game.steering.Scene2dSteeringUtils;
 /** A SteeringActor is a scene2d {@link Actor} implementing the {@link Steerable} interface.
  *
  * @autor davebaol */
-public class SteeringActor extends Actor implements Steerable<Vector2> {
+public class SteeringActor extends Actor implements AnimationController.AnimationListener, Steerable<Vector2> {
+
+    static public final float RIGHT_ANGLE = 3.1415927f / 2;
 
     private static final SteeringAcceleration<Vector2> steeringOutput = new SteeringAcceleration<Vector2>(new Vector2());
+
+    ModelInstance instance;
+
+    /** Animation controller */
+    protected AnimationController animationController;
 
     TextureRegion region;
 
     Vector2 position;  // like scene2d centerX and centerY, but we need a vector to implement Steerable
+
+    Quaternion direction = new Quaternion(Vector3.Y, 0);
+    Quaternion perspective = new Quaternion(Vector3.X, 0);
+    float tmp[] = new float[16];
+
     Vector2 linearVelocity;
     float angularVelocity;
     float boundingRadius;
@@ -73,6 +91,10 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
         this.setOrigin(region.getRegionWidth() * .5f, region.getRegionHeight() * .5f);
     }
 
+    public ModelInstance getInstance() {
+        return instance;
+    }
+
     public TextureRegion getRegion() {
         return region;
     }
@@ -88,21 +110,11 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
 
     @Override
     public float getOrientation() {
-        return getRotation() * MathUtils.degreesToRadians;
+        return 0;
     }
 
     @Override
     public void setOrientation(float orientation) {
-        setRotation(orientation * MathUtils.radiansToDegrees);
-    }
-
-    protected void setRandomOrientation(SteeringActor character) {
-        float orientation = MathUtils.random(-MathUtils.PI, MathUtils.PI);
-        character.setOrientation(orientation);
-        if (!character.isIndependentFacing()) {
-            // Set random initial non-zero linear velocity since independent facing is off
-            character.angleToVector(character.getLinearVelocity(), orientation).scl(character.getMaxLinearSpeed() / 5);
-        }
     }
 
     @Override
@@ -240,6 +252,40 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
         super.act(delta);
     }
 
+    @Override
+    public void setPosition (float x, float y, int alignment) {
+        super.setPosition(x, y, alignment);
+        if (this.instance != null) {
+            direction.set(Vector3.Y, getRotation() + 180);
+            perspective.set(Vector3.X, 60);
+            perspective.mul(direction);
+            perspective.toMatrix(tmp);
+            for (int i = 0; i < tmp.length; i++) {
+                this.instance.transform.val[i] = tmp[i];
+            }
+            this.instance.transform.val[Matrix4.M03] = x;
+            this.instance.transform.val[Matrix4.M13] = y;
+            //instance.transform.setToTranslation(x, y, 0);
+        }
+    }
+
+    public void setInstance(ModelInstance instance) {
+        this.instance = instance;
+        for(Material m : instance.materials){
+            m.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_NONE));
+            m.set(new FloatAttribute(FloatAttribute.AlphaTest, 0.5f));
+            m.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+        }
+        //Get animations if any
+        if(instance.animations.size > 0){
+            animationController = new AnimationController(instance);
+            animationController.allowSameAnimation = true;
+            animationController.animate(instance.animations.get(0).id, -1, 1f, this, 1f);
+            //currentAnimation = 0;
+            //animationController.animate(instance.animations.get(currentAnimation).id, this, 0.5f);
+        }
+    }
+
     // the display area is considered to wrap around from top to bottom
     // and from left to right
     protected static void wrapAround(Vector2 pos, float maxX, float maxY) {
@@ -298,6 +344,10 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
         return active;
     }
 
+    public AnimationController getAnimationController() {
+        return animationController;
+    }
+
     public Mob getMob() {
         return mob;
     }
@@ -308,5 +358,16 @@ public class SteeringActor extends Actor implements Steerable<Vector2> {
 
     public void deselect() {
         mob = null;
+    }
+
+
+    @Override
+    public void onEnd(AnimationController.AnimationDesc animation) {
+
+    }
+
+    @Override
+    public void onLoop(AnimationController.AnimationDesc animation) {
+
     }
 }

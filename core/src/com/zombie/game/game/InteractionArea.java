@@ -18,10 +18,13 @@ public class InteractionArea {
 
     private Array<SteeringActor> characters;
 
+    GameScene scene;
+
     private Group group;
 
-    public InteractionArea(Array<SteeringActor> characters, Group group) {
-        this.characters = characters;
+    public InteractionArea(GameScene scene, Group group) {
+        this.characters = scene.characters;
+        this.scene = scene;
         this.group = group;
         this.blendedSteerings = new Array<BlendedSteering<Vector2>>();
         this.proximities = new Array<FieldOfViewProximity<Vector2>>();
@@ -49,5 +52,9 @@ public class InteractionArea {
 
     public Group getGroup() {
         return group;
+    }
+
+    public GameScene getScene() {
+        return scene;
     }
 }
