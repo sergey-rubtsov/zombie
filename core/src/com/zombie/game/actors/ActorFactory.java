@@ -49,9 +49,8 @@ public class ActorFactory {
 
         while (true) {
             if (assetManager.update()) {
-                ModelInstance instance = new ModelInstance(assetManager.get("human.g3db", Model.class));
-                //instance.transform.rotate(Vector3.X, 60);
-                zombie.setInstance(instance);
+                ModelInstance modelInstance = new ModelInstance(assetManager.get("human.g3db", Model.class));
+                zombie.setModelInstance(modelInstance);
                 break;
             }
         }

@@ -48,18 +48,18 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
 
     private static final SteeringAcceleration<Vector2> steeringOutput = new SteeringAcceleration<Vector2>(new Vector2());
 
-    ModelInstance instance;
+    ModelInstance modelInstance;
 
     /** Animation controller */
     protected AnimationController animationController;
 
     TextureRegion region;
 
-    Vector2 position;  // like scene2d centerX and centerY, but we need a vector to implement Steerable
+    Vector2 position; // like scene2d centerX and centerY, but we need a vector to implement Steerable
 
     Quaternion direction = new Quaternion(Vector3.Y, 0);
     Quaternion perspective = new Quaternion(Vector3.X, 0);
-    float tmp[] = new float[16];
+    float transform[] = new float[16];
 
     Vector2 linearVelocity;
     float angularVelocity;
@@ -91,8 +91,8 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
         this.setOrigin(region.getRegionWidth() * .5f, region.getRegionHeight() * .5f);
     }
 
-    public ModelInstance getInstance() {
-        return instance;
+    public ModelInstance getModelInstance() {
+        return modelInstance;
     }
 
     public TextureRegion getRegion() {
@@ -238,7 +238,7 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
 			/*
              * Here you might want to add a motor control layer filtering steering accelerations.
 			 * 
-			 * For instance, a car in a driving game has physical constraints on its movement: it cannot turn while stationary; the
+			 * For modelInstance, a car in a driving game has physical constraints on its movement: it cannot turn while stationary; the
 			 * faster it moves, the slower it can turn (without going into a skid); it can brake much more quickly than it can
 			 * accelerate; and it only moves in the direction it is facing (ignoring power slides).
 			 */
@@ -255,34 +255,23 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
     @Override
     public void setPosition (float x, float y, int alignment) {
         super.setPosition(x, y, alignment);
-        if (this.instance != null) {
-            direction.set(Vector3.Y, getRotation() + 180);
-            perspective.set(Vector3.X, 60);
-            perspective.mul(direction);
-            perspective.toMatrix(tmp);
-            for (int i = 0; i < tmp.length; i++) {
-                this.instance.transform.val[i] = tmp[i];
-            }
-            this.instance.transform.val[Matrix4.M03] = x;
-            this.instance.transform.val[Matrix4.M13] = y;
-            //instance.transform.setToTranslation(x, y, 0);
-        }
     }
 
-    public void setInstance(ModelInstance instance) {
-        this.instance = instance;
-        for(Material m : instance.materials){
+    public void setModelInstance(ModelInstance modelInstance) {
+        this.modelInstance = modelInstance;
+        this.transform = modelInstance.transform.val;
+        for(Material m : modelInstance.materials){
             m.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_NONE));
             m.set(new FloatAttribute(FloatAttribute.AlphaTest, 0.5f));
             m.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
         }
         //Get animations if any
-        if(instance.animations.size > 0){
-            animationController = new AnimationController(instance);
+        if(modelInstance.animations.size > 0){
+            animationController = new AnimationController(modelInstance);
             animationController.allowSameAnimation = true;
-            animationController.animate(instance.animations.get(0).id, -1, 1f, this, 1f);
+            animationController.animate(modelInstance.animations.get(0).id, -1, 1f, this, 1f);
             //currentAnimation = 0;
-            //animationController.animate(instance.animations.get(currentAnimation).id, this, 0.5f);
+            //animationController.animate(modelInstance.animations.get(currentAnimation).id, this, 0.5f);
         }
     }
 
@@ -363,11 +352,27 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
 
     @Override
     public void onEnd(AnimationController.AnimationDesc animation) {
-
     }
 
     @Override
     public void onLoop(AnimationController.AnimationDesc animation) {
+    }
 
+    /** Called when the actor's position has been changed. */
+    protected void positionChanged () {
+        transform[Matrix4.M03] = getPosition().x;
+        transform[Matrix4.M13] = getPosition().y;
+    }
+
+    /** Called when the actor's size has been changed. */
+    protected void sizeChanged () {
+    }
+
+    /** Called when the actor's rotation has been changed. */
+    protected void rotationChanged () {
+        direction.set(Vector3.Y, getRotation() + 180);
+        perspective.set(Vector3.X, 60);
+        perspective.mul(direction);
+        perspective.toMatrix(transform);
     }
 }
