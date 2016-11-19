@@ -44,8 +44,6 @@ import com.zombie.game.steering.Scene2dSteeringUtils;
  * @autor davebaol */
 public class SteeringActor extends Actor implements AnimationController.AnimationListener, Steerable<Vector2> {
 
-    static public final float RIGHT_ANGLE = 3.1415927f / 2;
-
     private static final SteeringAcceleration<Vector2> steeringOutput = new SteeringAcceleration<Vector2>(new Vector2());
 
     ModelInstance modelInstance;
@@ -58,7 +56,7 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
     Vector2 position; // like scene2d centerX and centerY, but we need a vector to implement Steerable
 
     Quaternion direction = new Quaternion(Vector3.Y, 0);
-    Quaternion perspective = new Quaternion(Vector3.X, 0);
+    Quaternion perspective = new Quaternion();
     float transform[] = new float[16];
 
     Vector2 linearVelocity;
@@ -110,11 +108,21 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
 
     @Override
     public float getOrientation() {
-        return 0;
+        return getRotation() * MathUtils.degreesToRadians;
     }
 
     @Override
     public void setOrientation(float orientation) {
+        setRotation(orientation * MathUtils.radiansToDegrees);
+    }
+
+    protected void setRandomOrientation(SteeringActor character) {
+        float orientation = MathUtils.random(-MathUtils.PI, MathUtils.PI);
+        character.setOrientation(orientation);
+        if (!character.isIndependentFacing()) {
+            // Set random initial non-zero linear velocity since independent facing is off
+            character.angleToVector(character.getLinearVelocity(), orientation).scl(character.getMaxLinearSpeed() / 5);
+        }
     }
 
     @Override
@@ -270,8 +278,6 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
             animationController = new AnimationController(modelInstance);
             animationController.allowSameAnimation = true;
             animationController.animate(modelInstance.animations.get(0).id, -1, 1f, this, 1f);
-            //currentAnimation = 0;
-            //animationController.animate(modelInstance.animations.get(currentAnimation).id, this, 0.5f);
         }
     }
 
@@ -279,11 +285,8 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
     // and from left to right
     protected static void wrapAround(Vector2 pos, float maxX, float maxY) {
         if (pos.x > maxX) pos.x = 0.0f;
-
         if (pos.x < 0) pos.x = maxX;
-
         if (pos.y < 0) pos.y = maxY;
-
         if (pos.y > maxY) pos.y = 0.0f;
     }
 
@@ -349,7 +352,6 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
         mob = null;
     }
 
-
     @Override
     public void onEnd(AnimationController.AnimationDesc animation) {
     }
@@ -359,19 +361,19 @@ public class SteeringActor extends Actor implements AnimationController.Animatio
     }
 
     /** Called when the actor's position has been changed. */
-    protected void positionChanged () {
+    protected void positionChanged() {
         transform[Matrix4.M03] = getPosition().x;
         transform[Matrix4.M13] = getPosition().y;
     }
 
     /** Called when the actor's size has been changed. */
-    protected void sizeChanged () {
+    protected void sizeChanged() {
     }
 
     /** Called when the actor's rotation has been changed. */
-    protected void rotationChanged () {
+    protected void rotationChanged() {
         direction.set(Vector3.Y, getRotation() + 180);
-        perspective.set(Vector3.X, 60);
+        perspective.set(0.5f, 0f, 0f, 0.8660254f);
         perspective.mul(direction);
         perspective.toMatrix(transform);
     }

@@ -34,7 +34,7 @@ public class GameScene implements EventListener {
 
     private static final boolean DEBUG_STAGE = false;
 
-    SceneInputProcessor inputProcessor;
+    //SceneInputProcessor inputProcessor;
 
     private Pointer pointer;
 
@@ -47,8 +47,6 @@ public class GameScene implements EventListener {
     HexagonalTiledMapRenderer hexRenderer;
 
     ShapeRenderer shapeRenderer;
-
-    AssetManager assetManager;
 
     /** Environment that describes the lights etc. */
     private Environment environment;
@@ -83,7 +81,7 @@ public class GameScene implements EventListener {
     private SteeringActor highlighted;
 
     public GameScene() {
-        this.inputProcessor = new SceneInputProcessor(this);
+        //this.inputProcessor = new SceneInputProcessor(this);
         frame = new Frame();
         greenMob = new Mob(Color.GREEN);
         redMob = new Mob(Color.RED);
@@ -167,12 +165,12 @@ public class GameScene implements EventListener {
         light.direction.set(camera.direction);
         modelBatch.begin(camera);
         for (SteeringActor actor : this.characters) {
-            //Update animation
-            if(actor.getAnimationController() != null)
-                actor.getAnimationController().update(Gdx.graphics.getDeltaTime());
-            //Render model
-            if(actor.getModelInstance() != null)
+            if(actor.getModelInstance() != null) {
+                //Render model
                 modelBatch.render(actor.getModelInstance(), environment);
+                //Update animation
+                actor.getAnimationController().update(Gdx.graphics.getDeltaTime());
+            }
         }
         modelBatch.end();
     }
@@ -254,9 +252,9 @@ public class GameScene implements EventListener {
         camera.processMoveCamera(deltaTime);
     }
 
-    public SceneInputProcessor getSceneInputProcessor() {
+/*    public SceneInputProcessor getSceneInputProcessor() {
         return inputProcessor;
-    }
+    }*/
 
     public void openFrame(Vector2 unprojectPosition, int button) {
         frame.setPointA(unprojectPosition);
