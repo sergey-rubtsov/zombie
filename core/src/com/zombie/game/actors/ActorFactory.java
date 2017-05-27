@@ -49,7 +49,7 @@ public class ActorFactory {
 
         while (true) {
             if (assetManager.update()) {
-                ModelInstance modelInstance = new ModelInstance(assetManager.get("human.g3db", Model.class));
+                ModelInstance modelInstance = new ModelInstance(assetManager.get("walking_3.g3db", Model.class));
                 zombie.setModelInstance(modelInstance);
                 break;
             }
