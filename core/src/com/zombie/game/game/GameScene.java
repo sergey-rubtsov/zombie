@@ -9,8 +9,12 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer;
@@ -54,6 +58,8 @@ public class GameScene implements EventListener {
     /** Model batch that renders our models */
     private ModelBatch modelBatch;
 
+    private ShaderProgram shaderProgram;
+
     SpriteBatch spriteBatch = new SpriteBatch();
 
     /** Scene light */
@@ -70,6 +76,7 @@ public class GameScene implements EventListener {
     InteractionArea area;
 
     private float lastUpdateTime;
+
     GameCamera camera;
 
     private final Frame frame;
@@ -82,6 +89,7 @@ public class GameScene implements EventListener {
 
     public GameScene() {
         //this.inputProcessor = new SceneInputProcessor(this);
+        shaderProgram = setupShader();
         frame = new Frame();
         greenMob = new Mob(Color.GREEN);
         redMob = new Mob(Color.RED);
@@ -97,6 +105,28 @@ public class GameScene implements EventListener {
         this.pointer = new Pointer();
         this.pointer.getPosition().x = map.getMapWidth() / 2;
         this.pointer.getPosition().y = map.getMapHeight() / 2;
+
+    }
+
+    /**
+     * Initialize a shader, vertex shader must be named prefix_v.glsl, fragment shader must be named
+     * prefix_f.glsl
+     *
+     * @return
+     */
+    private ShaderProgram setupShader() {
+        ShaderProgram.pedantic = false;
+        final ShaderProgram shaderProgram = new ShaderProgram (
+                Gdx.files.internal("shaders/scene_v.glsl"),
+                Gdx.files.internal("shaders/scene_f.glsl"));
+        if (!shaderProgram.isCompiled()) {
+            System.err.println(shaderProgram.getLog());
+            System.exit(1);
+        }
+        else {
+            Gdx.app.log("init", "Shader compiled " + shaderProgram.getLog());
+        }
+        return shaderProgram;
     }
 
     public void create() {
@@ -107,7 +137,15 @@ public class GameScene implements EventListener {
         environment.add(light);
 
         //Initialize batches and fonts
-        modelBatch = new ModelBatch();
+
+        modelBatch = new ModelBatch(new DefaultShaderProvider()
+        {
+            @Override
+            protected Shader createShader(final Renderable renderable)
+            {
+                return new SimpleTextureShader(renderable, shaderProgram);
+            }
+        });
         world = createWorld();
         buildGroup(map.getMapWidth(), map.getMapHeight());
         buildCharacters();
