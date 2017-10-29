@@ -1,6 +1,11 @@
 package com.zombie.game.actors;
 
-import com.badlogic.gdx.ai.steer.behaviors.*;
+import com.badlogic.gdx.ai.steer.behaviors.Alignment;
+import com.badlogic.gdx.ai.steer.behaviors.BlendedSteering;
+import com.badlogic.gdx.ai.steer.behaviors.Cohesion;
+import com.badlogic.gdx.ai.steer.behaviors.PrioritySteering;
+import com.badlogic.gdx.ai.steer.behaviors.Separation;
+import com.badlogic.gdx.ai.steer.behaviors.Wander;
 import com.badlogic.gdx.ai.steer.proximities.FieldOfViewProximity;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -8,7 +13,6 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
@@ -106,19 +110,6 @@ public class ActorFactory {
 
     public static Zombie getRandomZombie(InteractionArea area) {
         return getRandomZombie(area.getProximities(), area.getCharacters(), area.getBlendedSteerings(), area.getGroup());
-    }
-
-    public static SteeringActor getRandomSurvivor(InteractionArea area) {
-        Survivor s = new Survivor();
-        //s.setArriveSB(target);
-
-        area.getGroup().addActor(s);
-        //area.getGroup().addActor(pointer);
-
-        //s.setPosition(getStage().getWidth() / 2, getStage().getHeight() / 2, Align.center);
-        //pointer.setPosition(MathUtils.random(getStage().getWidth()), MathUtils.random(getStage().getHeight()), Align.center);
-
-        return s;
     }
 
 }

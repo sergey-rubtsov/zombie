@@ -1,9 +1,7 @@
 package com.zombie.game.gui.styles;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.zombie.game.game.Assets;
 
 /**

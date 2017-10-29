@@ -4,11 +4,12 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ai.GdxAI;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.zombie.game.game.GameScene;
 import com.zombie.game.game.SceneInputProcessor;
 import com.zombie.game.gui.GUITable;
-import com.zombie.game.game.GameScene;
 
 public class ZombieGame extends ApplicationAdapter {
 

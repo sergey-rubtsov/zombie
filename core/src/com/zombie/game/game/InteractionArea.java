@@ -5,7 +5,6 @@ import com.badlogic.gdx.ai.steer.proximities.FieldOfViewProximity;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.Array;
-import com.zombie.game.actors.Mob;
 import com.zombie.game.actors.SteeringActor;
 
 public class InteractionArea {

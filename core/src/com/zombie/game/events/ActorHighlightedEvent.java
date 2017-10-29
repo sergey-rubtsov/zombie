@@ -1,7 +1,6 @@
 package com.zombie.game.events;
 
 import com.badlogic.gdx.scenes.scene2d.Event;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.zombie.game.actors.SteeringActor;
 
 /**
